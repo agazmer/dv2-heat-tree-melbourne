@@ -60,6 +60,10 @@
                         "key": "SA2_CODE21",
                         "fields": ["uhi_mean", "SA2_NAME21", "tree_sum", "tree_count"]
                     }
+                },
+                {
+                    "calculate": "datum.tree_count ? (datum.tree_sum / datum.tree_count) * 100 : null",
+                    "as": "tree_pct"
                 }
             ],
 
@@ -77,7 +81,8 @@
                     { "field": "properties.SA2_CODE21", "type": "nominal", "title": "SA2 code" },
                     { "field": "uhi_mean", "type": "quantitative", "title": "UHI mean (°C)", "format": ".2f" },
                     { "field": "tree_sum", "type": "quantitative", "title": "Tree pixels (sum)", "format": "," },
-                    { "field": "tree_count", "type": "quantitative", "title": "Tree pixels (count)", "format": "," }
+                    { "field": "tree_count", "type": "quantitative", "title": "Tree pixels (count)", "format": "," },
+                    {"field": "tree_pct",   "type": "quantitative", "title": "Tree cover (%)",      "format": ".1f"}
                 ]
             }
         };
