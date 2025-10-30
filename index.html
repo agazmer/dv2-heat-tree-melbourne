@@ -52,14 +52,18 @@
         "field": "uhi_mean",
         "type": "quantitative",
         "title": "Mean UHI (2018–19)",
-        "scale": {"scheme": "orangered"}
+        "scale": {"scheme": "reds"}
       },
+      "stroke": {"value": "#ffffff"},
+      "strokeWidth": {"value": 0.5}
+    },
+    "view": {"stroke": null}
       "tooltip": [
         {"field": "SA2_NAME21", "type": "nominal", "title": "SA2"},
         {"field": "SA2_CODE21", "type": "nominal", "title": "SA2 code"},
-        {"field": "uhi_mean", "type": "quantitative", "title": "UHI mean", "format": ".2f"},
-        {"field": "tree_sum", "type": "quantitative", "title": "Tree pixels (sum)"},
-        {"field": "tree_count", "type": "quantitative", "title": "Tree pixels (count)"}
+        {"field": "uhi_mean",   "type": "quantitative", "title": "UHI mean (°C)", "format": ".2f"},
+        {"field": "tree_sum",   "type": "quantitative", "title": "Tree pixels (sum)",   "format": ","},
+        {"field": "tree_count", "type": "quantitative", "title": "Tree pixels (count)", "format": ","}
       ]
     }
   };
