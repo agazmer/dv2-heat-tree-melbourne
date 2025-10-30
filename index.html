@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Urban Heat vs Tree Cover – Greater Melbourne (DV2)</title>
+    <title>Urban Heat vs Tree Cover - Greater Melbourne (DV2)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- Vega, Vega-Lite, and vega-embed from jsDelivr -->
     <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
@@ -30,8 +30,8 @@
 
 <body>
     <header>
-        <h1>Urban Heat vs Tree Cover – Greater Melbourne</h1>
-        <p>Prototype choropleth: UHI mean by SA2 (you’ll see tooltips; we’ll style and add more views next).</p>
+        <h1>Urban Heat vs Tree Cover - Greater Melbourne</h1>
+        <p>Prototype choropleth: UHI mean by SA2 (you'll see tooltips; we'll style and add more views next).</p>
     </header>
 
     <div class="wrap">
@@ -39,57 +39,72 @@
     </div>
 
     <script>
-        // Inline Vega-Lite spec (simple, working map)
-        const spec = {
-            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-            "width": 900,
-            "height": 700,
-            "config": { "view": { "stroke": null } },
-            "projection": { "type": "mercator" },
-
-            "data": {
-                "url": "data/processed/melb_sa2_simplified.topojson",
-                "format": { "type": "topojson", "feature": "melb_sa2" }
-            },
-
-            "transform": [
-                {
-                    "lookup": "properties.SA2_CODE21",
-                    "from": {
-                        "data": { "url": "data/processed/melb_sa2_stats.csv" },
-                        "key": "SA2_CODE21",
-                        "fields": ["uhi_mean", "SA2_NAME21", "tree_sum", "tree_count"]
-                    }
-                },
-                {
-                    "calculate": "datum.tree_count ? (datum.tree_sum / datum.tree_count) * 100 : null",
-                    "as": "tree_pct"
-                }
-            ],
-
-            "mark": { "type": "geoshape", "stroke": "#ffffff", "strokeWidth": 0.5 },
-
-            "encoding": {
-                "color": {
-                    "field": "uhi_mean",
-                    "type": "quantitative",
-                    "title": "Mean UHI (2018–19)",
-                    "scale": { "scheme": "reds" }
-                },
-                "tooltip": [
-                    { "field": "SA2_NAME21", "type": "nominal", "title": "SA2" },
-                    { "field": "properties.SA2_CODE21", "type": "nominal", "title": "SA2 code" },
-                    { "field": "uhi_mean", "type": "quantitative", "title": "UHI mean (°C)", "format": ".2f" },
-                    { "field": "tree_sum", "type": "quantitative", "title": "Tree pixels (sum)", "format": "," },
-                    { "field": "tree_count", "type": "quantitative", "title": "Tree pixels (count)", "format": "," },
-                    {"field": "tree_pct",   "type": "quantitative", "title": "Tree cover (%)",      "format": ".1f"}
-                ]
+        const mapData = {
+            "url": "data/processed/melb_sa2_simplified.topojson",
+            "format": { "type": "topojson", "feature": "melb_sa2" }
+        };
+        const joinXform = [{
+            "lookup": "properties.SA2_CODE21",
+            "from": {
+                "data": { "url": "data/processed/melb_sa2_stats.csv" },
+                "key": "SA2_CODE21",
+                "fields": ["SA2_CODE21", "SA2_NAME21", "uhi_mean", "tree_sum", "tree_count", "tree_cover_pct"]
             }
+        }];
+
+        const baseMap = {
+            "width": 430, "height": 520,
+            "projection": { "type": "mercator" },
+            "data": mapData,
+            "transform": joinXform,
+            "mark": { "type": "geoshape" },
+            "encoding": {
+                "stroke": { "value": "#fff" },
+                "strokeWidth": { "value": 0.5 },
+                "tooltip": [
+                    { "field": "SA2_NAME21", "title": "SA2" },
+                    { "field": "SA2_CODE21", "title": "SA2 code" },
+                    { "field": "uhi_mean", "title": "UHI mean (°C)", "format": ".2f" },
+                    { "field": "tree_cover_pct", "title": "Tree cover (%)", "format": ".1f" }
+                ]
+            },
+            "view": { "stroke": null }
         };
 
+        const spec = {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            "config": { "view": { "stroke": null } },
+            "hconcat": [
+                // Left: UHI mean
+                {
+                    ...baseMap,
+                    "encoding": {
+                        ...baseMap.encoding,
+                        "color": {
+                            "field": "uhi_mean", "type": "quantitative",
+                            "title": "Mean UHI (2018-19)",
+                            "scale": { "scheme": "reds" }
+                        }
+                    }
+                },
+                // Right: Tree cover %
+                {
+                    ...baseMap,
+                    "encoding": {
+                        ...baseMap.encoding,
+                        "color": {
+                            "field": "tree_cover_pct", "type": "quantitative",
+                            "title": "Tree cover (%)",
+                            "scale": { "scheme": "greens" }
+                        }
+                    }
+                }
+            ]
+        };
 
         vegaEmbed("#viz", spec, { actions: false });
     </script>
+
 </body>
 
 </html>
