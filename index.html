@@ -1,14 +1,87 @@
 <!doctype html>
-<meta charset="utf-8">
-<title>Urban Heat vs Tree Cover — Greater Melbourne</title>
-<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
-<div id="vis"></div>
-<script>
-  const spec = { $schema:"https://vega.github.io/schema/vega-lite/v5.json",
-    data:{ values:[{x:"A",y:1},{x:"B",y:2}] }, mark:"bar",
-    encoding:{ x:{field:"x",type:"nominal"}, y:{field:"y",type:"quantitative"} }
-  };
-  vegaEmbed('#vis', spec, {actions:false});
-</script>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Urban Heat vs Tree Cover — Greater Melbourne</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Vega + Vega-Lite + Vega-Embed (official) -->
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <style>
+    body { font: 14px/1.4 system-ui, sans-serif; margin: 16px; }
+    .viz { max-width: 950px; margin: 0 0 28px; }
+  </style>
+</head>
+<body>
+  <h1>Urban Heat vs Tree Cover — Greater Melbourne</h1>
+
+  <!-- 1) Quick test bar chart (proves CSV loads) -->
+  <div id="bar" class="viz"></div>
+
+  <!-- 2) Melbourne SA2 map shell (TopoJSON + geoshape) -->
+  <div id="map" class="viz"></div>
+
+  <script>
+    // --- (A) Tiny bar chart to prove CSV loads ---
+    const barSpec = {
+      $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+      width: 500, height: 220,
+      data: { url: "data/processed/melb_sa2_stats.csv" },
+      transform: [
+        // pick a small sample so it renders fast
+        { window: [{op:"row_number", as:"rn"}] },
+        { filter: "datum.rn <= 10" }
+      ],
+      mark: "bar",
+      encoding: {
+        x: { field: "SA2_NAME21", type: "nominal", sort: "-y", title: "SA2 (sample)" },
+        y: { field: "uhi_mean", type: "quantitative", title: "Mean UHI (°C)" },
+        tooltip: [{field:"SA2_NAME21"}, {field:"uhi_mean", type:"quantitative"}]
+      }
+    };
+    vegaEmbed("#bar", barSpec, {actions:false});
+
+    // --- (B) Choropleth shell (TopoJSON + geoshape) ---
+    // NOTE: "feature" must match the object name inside your TopoJSON.
+    // Mapshaper normally uses the layer name. If unsure, open the file in a text editor
+    // and look for:  "objects": { "<NAME>": { ... } }
+    const topoFeatureName = "melb_sa2"; // <-- change if your object key differs
+
+    const mapSpec = {
+      $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+      width: 700, height: 520,
+      projection: { type: "mercator" },
+      data: {
+        url: "data/processed/melb_sa2_simplified.topojson",
+        format: { type: "topojson", feature: topoFeatureName } // Vega(-Lite) supports TopoJSON via format.feature
+      },
+      transform: [
+        // Join CSV stats onto the geometries by SA2_CODE21
+        {
+          lookup: "properties.SA2_CODE21",
+          from: {
+            data: { url: "data/processed/melb_sa2_stats.csv" },
+            key: "SA2_CODE21",
+            fields: ["uhi_mean","tree_count","tree_sum","SA2_NAME21"]
+          }
+        }
+      ],
+      mark: { type: "geoshape", stroke: "#fff", strokeWidth: 0.5 },
+      encoding: {
+        color: {
+          field: "uhi_mean", type: "quantitative",
+          title: "Mean UHI (°C)",
+          scale: { scheme: "oranges" }
+        },
+        tooltip: [
+          { field: "SA2_NAME21", title: "SA2" },
+          { field: "uhi_mean", title: "UHI (°C)", format: ".2f" },
+          { field: "tree_count", title: "Tree pixels (count)" }
+        ]
+      }
+    };
+    vegaEmbed("#map", mapSpec, {actions:false});
+  </script>
+</body>
+</html>
