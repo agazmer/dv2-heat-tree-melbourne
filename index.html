@@ -91,6 +91,7 @@
         // LEFT: UHI
         const specUHI = {
             title: "Mean UHI (2018-19, °C)",
+            "offset": 20,
             $schema: "https://vega.github.io/schema/vega-lite/v5.json",
             ...baseGeom,
             encoding: {
@@ -107,6 +108,8 @@
 
         // RIGHT: Tree cover %
         const specTree = {
+            title: "Tree cover (%)",
+            "offset": 20,
             $schema: "https://vega.github.io/schema/vega-lite/v5.json",
             ...baseGeom,
             encoding: {
