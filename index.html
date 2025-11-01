@@ -46,7 +46,6 @@
 <body>
     <header>
         <h1>Urban Heat vs Tree Cover - Greater Melbourne</h1>
-        <p>Prototype choropleth: UHI mean by SA2 (you'll see tooltips; we'll style and add more views next).</p>
     </header>
 
     <div class="wrap">
@@ -127,6 +126,64 @@
         vegaEmbed("#map-1", specUHI, { actions: false });
         vegaEmbed("#map-2", specTree, { actions: false });
     </script>
+
+    <script>
+        // SCATTERPLOT: Tree cover (%) vs. Mean UHI (°C) by SA2
+        const scatterSpec = {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            "width": 1100,
+            "height": 380,
+            "data": { "url": "data/processed/melb_sa2_stats.csv" },
+            "transform": [
+                { "calculate": "datum.tree_count > 0 ? (datum.tree_sum/datum.tree_count)*100 : null", "as": "tree_pct" },
+                { "filter": "isValid(datum.tree_pct) && isValid(datum.uhi_mean)" }
+            ],
+            "layer": [
+                {
+                    "mark": { "type": "point", "filled": true, "opacity": 0.7, "size": 45 },
+                    "encoding": {
+                        "x": { "field": "tree_pct", "type": "quantitative", "title": "Tree cover (%)" },
+                        "y": { "field": "uhi_mean", "type": "quantitative", "title": "Mean UHI (2018-19, °C)" },
+                        "tooltip": [
+                            { "field": "SA2_NAME21", "type": "nominal", "title": "SA2" },
+                            { "field": "SA2_CODE21", "type": "nominal", "title": "SA2 code" },
+                            { "field": "tree_pct", "type": "quantitative", "title": "Tree cover (%)", "format": ".1f" },
+                            { "field": "uhi_mean", "type": "quantitative", "title": "UHI mean (°C)", "format": ".2f" }
+                        ],
+                        "color": {
+                            "field": "tree_pct",
+                            "type": "quantitative",
+                            "scale": { "scheme": "greens" },
+                            "title": "Tree cover (%)"
+                        }
+                    }
+                },
+                {
+                    // add a regression (linear fit) line
+                    "transform": [{ "regression": "uhi_mean", "on": "tree_pct" }],
+                    "mark": { "type": "line", "color": "#333", "strokeWidth": 2 },
+                    "encoding": {
+                        "x": { "field": "tree_pct", "type": "quantitative" },
+                        "y": { "field": "uhi_mean", "type": "quantitative" }
+                    }
+                }
+            ],
+            "config": {
+                "axis": { "labelFontSize": 12, "titleFontSize": 12 },
+                "view": { "stroke": null }
+            }
+        };
+
+        vegaEmbed("#scatter", scatterSpec, { actions: false });
+    </script>
+
+
+    <section class="wrap">
+        <h2 style="margin:24px 0 8px">How tree cover relates to urban heat (SA2s)</h2>
+        <p style="margin:0 0 12px;color:#666">Each dot is an SA2. Line shows linear fit.</p>
+        <div id="scatter" style="max-width:1200px"></div>
+    </section>
+
 </body>
 
 </html>
