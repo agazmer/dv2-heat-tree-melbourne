@@ -128,54 +128,49 @@
     </script>
 
     <script>
-        // SCATTERPLOT: Tree cover (%) vs. Mean UHI (°C) by SA2
+        // Scatterplot: Tree cover (%) vs Mean UHI (°C)
         const scatterSpec = {
-            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-            "width": 1100,
-            "height": 380,
-            "data": { "url": "data/processed/melb_sa2_stats.csv" },
-            "transform": [
-                { "calculate": "datum.tree_count > 0 ? (datum.tree_sum/datum.tree_count)*100 : null", "as": "tree_pct" },
-                { "filter": "isValid(datum.tree_pct) && isValid(datum.uhi_mean)" }
+            width: 1100,
+            height: 380,
+            data: { url: "data/processed/melb_sa2_stats.csv" },
+            transform: [
+                { calculate: "datum.tree_count > 0 ? (datum.tree_sum/datum.tree_count)*100 : null", as: "tree_pct" },
+                { filter: "isValid(datum.tree_pct) && isValid(datum.uhi_mean)" }
             ],
-            "layer": [
+            layer: [
                 {
-                    "mark": { "type": "point", "filled": true, "opacity": 0.7, "size": 45 },
-                    "encoding": {
-                        "x": { "field": "tree_pct", "type": "quantitative", "title": "Tree cover (%)" },
-                        "y": { "field": "uhi_mean", "type": "quantitative", "title": "Mean UHI (2018-19, °C)" },
-                        "tooltip": [
-                            { "field": "SA2_NAME21", "type": "nominal", "title": "SA2" },
-                            { "field": "SA2_CODE21", "type": "nominal", "title": "SA2 code" },
-                            { "field": "tree_pct", "type": "quantitative", "title": "Tree cover (%)", "format": ".1f" },
-                            { "field": "uhi_mean", "type": "quantitative", "title": "UHI mean (°C)", "format": ".2f" }
-                        ],
-                        "color": {
-                            "field": "tree_pct",
-                            "type": "quantitative",
-                            "scale": { "scheme": "greens" },
-                            "title": "Tree cover (%)"
-                        }
+                    mark: { type: "point", filled: true, opacity: 0.7, size: 45 },
+                    encoding: {
+                        x: { field: "tree_pct", type: "quantitative", title: "Tree cover (%)" },
+                        y: { field: "uhi_mean", type: "quantitative", title: "Mean UHI (2018-19, °C)" },
+                        color: { field: "tree_pct", type: "quantitative", scale: { scheme: "greens" }, title: "Tree cover (%)" },
+                        tooltip: [
+                            { field: "SA2_NAME21", type: "nominal", title: "SA2" },
+                            { field: "SA2_CODE21", type: "nominal", title: "SA2 code" },
+                            { field: "tree_pct", type: "quantitative", title: "Tree cover (%)", format: ".1f" },
+                            { field: "uhi_mean", type: "quantitative", title: "UHI mean (°C)", format: ".2f" }
+                        ]
                     }
                 },
                 {
-                    // add a regression (linear fit) line
-                    "transform": [{ "regression": "uhi_mean", "on": "tree_pct" }],
-                    "mark": { "type": "line", "color": "#333", "strokeWidth": 2 },
-                    "encoding": {
-                        "x": { "field": "tree_pct", "type": "quantitative" },
-                        "y": { "field": "uhi_mean", "type": "quantitative" }
+                    // regression line (uhi_mean ~ tree_pct)
+                    transform: [{ regression: "uhi_mean", on: "tree_pct" }],
+                    mark: { type: "line", color: "#333", strokeWidth: 2 },
+                    encoding: {
+                        x: { field: "tree_pct", type: "quantitative" },
+                        y: { field: "uhi_mean", type: "quantitative" }
                     }
                 }
             ],
-            "config": {
-                "axis": { "labelFontSize": 12, "titleFontSize": 12 },
-                "view": { "stroke": null }
+            config: {
+                axis: { labelFontSize: 12, titleFontSize: 12 },
+                view: { stroke: null }
             }
         };
 
         vegaEmbed("#scatter", scatterSpec, { actions: false });
     </script>
+
 
 
     <section class="wrap">
