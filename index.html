@@ -25,89 +25,105 @@
             margin: 0 auto;
             padding: 16px 20px;
         }
+
+        .row {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        #map-1,
+        #map-2 {
+            flex: 1 1 520px;
+            /* grow to fill, base width ~520px */
+            min-width: 420px;
+            /* stack when narrower than this */
+        }
     </style>
 </head>
 
 <body>
-  <header>
-    <h1>Urban Heat vs Tree Cover - Greater Melbourne</h1>
-    <p>Prototype choropleth: UHI mean by SA2 (you'll see tooltips; we'll style and add more views next).</p>
-  </header>
+    <header>
+        <h1>Urban Heat vs Tree Cover - Greater Melbourne</h1>
+        <p>Prototype choropleth: UHI mean by SA2 (you'll see tooltips; we'll style and add more views next).</p>
+    </header>
 
-  <div class="wrap">
-    <div class="row">
-      <div id="map-1"></div>
-      <div id="map-2"></div>
+    <div class="wrap">
+        <div class="row">
+            <div id="map-1"></div>
+            <div id="map-2"></div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    const topo = {
-      url: "data/processed/melb_sa2_simplified.topojson",
-      format: { type: "topojson", feature: "melb_sa2" }
-    };
+    <script>
+        const topo = {
+            url: "data/processed/melb_sa2_simplified.topojson",
+            format: { type: "topojson", feature: "melb_sa2" }
+        };
 
-    // Tell Vega-Lite to parse the CSV fields as NUMBERS (prevents NaN)
-    const csvFrom = {
-      data: {
-        url: "data/processed/melb_sa2_stats.csv",
-        format: { type: "csv", parse: { uhi_mean: "number", tree_sum: "number", tree_count: "number" } }
-      },
-      key: "SA2_CODE21",
-      fields: ["uhi_mean", "SA2_NAME21", "tree_sum", "tree_count"]
-    };
+        // Tell Vega-Lite to parse the CSV fields as NUMBERS (prevents NaN)
+        const csvFrom = {
+            data: {
+                url: "data/processed/melb_sa2_stats.csv",
+                format: { type: "csv", parse: { uhi_mean: "number", tree_sum: "number", tree_count: "number" } }
+            },
+            key: "SA2_CODE21",
+            fields: ["uhi_mean", "SA2_NAME21", "tree_sum", "tree_count"]
+        };
 
-    const baseGeom = {
-      width: 520, height: 560,
-      projection: { type: "mercator" },
-      data: topo,
-      transform: [
-        { lookup: "properties.SA2_CODE21", from: csvFrom },
-        { calculate: "datum.tree_count > 0 ? (datum.tree_sum/datum.tree_count)*100 : null", as: "tree_pct" }
-      ],
-      mark: { type: "geoshape" },
-      encoding: {
-        stroke: { value: "#ffffff" },
-        strokeWidth: { value: 0.5 }
-      },
-      config: { view: { stroke: null } }
-    };
+        const baseGeom = {
+            width: 520, height: 560,
+            projection: { type: "mercator" },
+            data: topo,
+            transform: [
+                { lookup: "properties.SA2_CODE21", from: csvFrom },
+                { calculate: "datum.tree_count > 0 ? (datum.tree_sum/datum.tree_count)*100 : null", as: "tree_pct" }
+            ],
+            mark: { type: "geoshape" },
+            encoding: {
+                stroke: { value: "#ffffff" },
+                strokeWidth: { value: 0.5 }
+            },
+            config: { view: { stroke: null } }
+        };
 
-    // LEFT: UHI
-    const specUHI = {
-      $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-      ...baseGeom,
-      encoding: {
-        ...baseGeom.encoding,
-        color: { field: "uhi_mean", type: "quantitative", title: "Mean UHI (2018-19, °C)", scale: { scheme: "reds" } },
-        tooltip: [
-          { field: "SA2_NAME21", type: "nominal", title: "SA2" },
-          { field: "properties.SA2_CODE21", type: "nominal", title: "SA2 code" },
-          { field: "uhi_mean", type: "quantitative", title: "UHI mean (°C)", format: ".2f" },
-          { field: "tree_pct", type: "quantitative", title: "Tree cover (%)", format: ".1f" }
-        ]
-      }
-    };
+        // LEFT: UHI
+        const specUHI = {
+            title: "Mean UHI (2018-19, °C)",
+            $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+            ...baseGeom,
+            encoding: {
+                ...baseGeom.encoding,
+                color: { field: "uhi_mean", type: "quantitative", title: "Mean UHI (2018-19, °C)", scale: { scheme: "reds" } },
+                tooltip: [
+                    { field: "SA2_NAME21", type: "nominal", title: "SA2" },
+                    { field: "properties.SA2_CODE21", type: "nominal", title: "SA2 code" },
+                    { field: "uhi_mean", type: "quantitative", title: "UHI mean (°C)", format: ".2f" },
+                    { field: "tree_pct", type: "quantitative", title: "Tree cover (%)", format: ".1f" }
+                ]
+            }
+        };
 
-    // RIGHT: Tree cover %
-    const specTree = {
-      $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-      ...baseGeom,
-      encoding: {
-        ...baseGeom.encoding,
-        color: { field: "tree_pct", type: "quantitative", title: "Tree cover (%)", scale: { scheme: "greens" } },
-        tooltip: [
-          { field: "SA2_NAME21", type: "nominal", title: "SA2" },
-          { field: "properties.SA2_CODE21", type: "nominal", title: "SA2 code" },
-          { field: "tree_pct", type: "quantitative", title: "Tree cover (%)", format: ".1f" },
-          { field: "uhi_mean", type: "quantitative", title: "UHI mean (°C)", format: ".2f" }
-        ]
-      }
-    };
+        // RIGHT: Tree cover %
+        const specTree = {
+            $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+            ...baseGeom,
+            encoding: {
+                ...baseGeom.encoding,
+                color: { field: "tree_pct", type: "quantitative", title: "Tree cover (%)", scale: { scheme: "greens" } },
+                tooltip: [
+                    { field: "SA2_NAME21", type: "nominal", title: "SA2" },
+                    { field: "properties.SA2_CODE21", type: "nominal", title: "SA2 code" },
+                    { field: "tree_pct", type: "quantitative", title: "Tree cover (%)", format: ".1f" },
+                    { field: "uhi_mean", type: "quantitative", title: "UHI mean (°C)", format: ".2f" }
+                ]
+            }
+        };
 
-    vegaEmbed("#map-1", specUHI, { actions: false });
-    vegaEmbed("#map-2", specTree, { actions: false });
-  </script>
+        vegaEmbed("#map-1", specUHI, { actions: false });
+        vegaEmbed("#map-2", specTree, { actions: false });
+    </script>
 </body>
 
 </html>
